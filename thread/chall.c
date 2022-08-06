@@ -15,7 +15,7 @@ char name[MAX];
 void getdata(int connfd)
 {
     char *p;
-    char tmp[5];
+    char tmp[10];
     int x;
     memset(name, 0, MAX);
     char wel2[29] = "Give me the size of report:\n\x00";
@@ -25,7 +25,7 @@ void getdata(int connfd)
     write(connfd,wel3,sizeof(wel3)); 
     read(connfd,name,200-1);
     write(connfd,wel2,sizeof(wel2)); 
-    x = read(connfd,tmp,5);
+    x = read(connfd,tmp,10);
     if(x>0){
         tmp[x-1] = 0;
     }
