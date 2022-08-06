@@ -34,6 +34,7 @@ void getdata(int connfd)
         exit(1);
     }
     x = atoi(tmp);
+    printf("%d",x);
     if(x<=0){
         write(connfd,err,sizeof(err));
         exit(1);
