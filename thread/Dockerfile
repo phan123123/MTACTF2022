@@ -1,4 +1,4 @@
-FROM i386/ubuntu
+FROM i386/ubuntu:20.04
 
 MAINTAINER phanNT
 RUN apt-get update

@@ -5,17 +5,18 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #define MAX 200
-#define DEFAULT_SIZE 0x100000
+#define DEFAULT_SIZE 0x1200
 #define PORT 1337
 #define SA struct sockaddr
 
 char name[MAX];
+char* buff;
 
 void getdata(int connfd)
 {
-    char *p;
-    char tmp[10];
+    char tmp[9];
     int x;
     memset(name, 0, MAX);
     char wel2[29] = "Give me the size of report:\n\x00";
@@ -25,9 +26,9 @@ void getdata(int connfd)
     write(connfd,wel3,sizeof(wel3)); 
     read(connfd,name,200-1);
     write(connfd,wel2,sizeof(wel2)); 
-    x = read(connfd,tmp,10);
+    x = read(connfd,tmp,9);
     if(x>0){
-        tmp[x-1] = 0;
+        tmp[x-1] = NULL;
     }
     else{
         write(connfd,err,sizeof(err));
@@ -35,13 +36,12 @@ void getdata(int connfd)
     }
     x = atoi(tmp);
     printf("%d",x);
-    if(x<=0){
+    if(x<=0 || x > 0x8000){
         write(connfd,err,sizeof(err));
         exit(1);
     }
-    p = malloc(x);
     write(connfd,wel,sizeof(wel));
-    read(connfd,p,x);    
+    read(connfd,buff,x);    
 }
 
 void pwn(char *cmd){
@@ -53,6 +53,7 @@ int main()
     int sockfd, connfd, len, pid;
     struct sockaddr_in servaddr, cli;
     char msg[40] = "\nThank you for report!!\n\x00";
+    buff = mmap(NULL, DEFAULT_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1,0);
    
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -86,6 +87,7 @@ int main()
         printf("Server listening..\n");
     len = sizeof(cli);
     
+    
     while(1){
         connfd = accept(sockfd, (SA*)&cli, &len);
         if (connfd < 0) {
@@ -95,10 +97,7 @@ int main()
         else
             printf("server accept the client %d...\n",connfd);
         if ((pid = fork()) == -1){
-            printf("Error fork\n");
-            close(connfd);
-        }
-        else if(pid == 0){
+            printf("Error fork\n"); close(connfd); } else if(pid == 0){
             close(sockfd);
             getdata(connfd);
             write(connfd, msg, sizeof(msg));
